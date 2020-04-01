@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>layui多选插件</title>
+</head>
+<script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+<!--<script src="./static/layui/layui.js"></script>-->
+<script src="./static/layui/xm-select.js"></script>
+
+<body>
+<div id="demo1">
+</div>
+<div id="demo1_value">获取选中的值</div>
+</body>
+
+<script  type="text/javascript">
+
+  var demo1 = xmSelect.render({
+		el: '#demo1',
+		autoRow: true,
+		toolbar: { show: true },
+		filterable: true,
+		remoteSearch: true,
+    paging: true,
+    pageSize: 3, //每页显示多少
+    height: '150px',//最大高度
+		remoteMethod: function(val, cb, show){
+			//这里如果val为空, 则不触发搜索
+			if(!val){
+				return cb([
+          {name: '张三', value: 1},
+          {name: '李四', value: 2},
+          {name: '王五', value: 3},
+        ]);
+			}
+			//这里引入了一个第三方插件axios, 相当于$.ajax
+			// axios({
+			// 	method: 'get',
+			// 	url: 'https://www.fastmock.site/mock/98228b1f16b7e5112d6c0c87921eabc1/xmSelect/search',
+			// 	params: {
+			// 		keyword: val,
+			// 	}
+			// }).then(response => {
+			// 	var res = response.data;
+			// 	cb(res.data)
+			// }).catch(err => {
+			// 	cb([]);
+			// });
+			$.ajax({
+            //请求方式
+            type:"GET",
+            //文件位置
+            url:"http://127.0.0.1:9000/get_menus",
+            //返回数据格式为json,也可以是其他格式如
+            dataType: "json",
+            //请求成功后要执行的函数，拼接html
+            success: function(data){
+              //数据结构
+              // data = [{"name":"1","value":"白居易"},{"name":"2","value":"李白"},{"name":"3","value":"韩明明"},{"name":"4","value":"韩明明1"},{"name":"5","value":"韩明明2"}]
+
+              var data_list = []
+              $.each(data.data,function(i,n){
+                data_list.push({name:n.value,value:n.name})
+              });
+              cb(data_list)
+            }
+        });
+		},
+	})
+  document.getElementById('demo1_value').onclick = function(){
+    //获取当前多选选中的值
+    // 函数getValue(type), type类型 name, nameStr, value, valueStr
+    var selectArr = demo1.getValue("value");
+    document.getElementById('demo1_value').innerHTML = `\n选中的值：\n\n` + JSON.stringify(selectArr, null, 2);
+  }
+</script>
+</html>
+
