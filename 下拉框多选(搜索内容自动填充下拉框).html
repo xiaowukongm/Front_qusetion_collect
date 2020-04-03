@@ -19,20 +19,19 @@
   var demo1 = xmSelect.render({
 		el: '#demo1',
 		autoRow: true,
-		toolbar: { show: true },
+		toolbar: { show: false },
 		filterable: true,
 		remoteSearch: true,
-    paging: true,
-    pageSize: 3, //每页显示多少
-    height: '150px',//最大高度
+        paging: true,
+        pageSize: 3, //每页显示多少
+        height: '150px',//最大高度
+        template({ item, sels, name, value }){
+            return item.name  + '<span style="position: absolute; right: 10px; color: #8799a3">'+value+'</span>'
+        },
 		remoteMethod: function(val, cb, show){
 			//这里如果val为空, 则不触发搜索
 			if(!val){
-				return cb([
-          {name: '张三', value: 1},
-          {name: '李四', value: 2},
-          {name: '王五', value: 3},
-        ]);
+				return cb([]);
 			}
 			//这里引入了一个第三方插件axios, 相当于$.ajax
 			// axios({
@@ -56,6 +55,7 @@
             dataType: "json",
             //请求成功后要执行的函数，拼接html
             success: function(data){
+              console.log(data.data)
               //数据结构
               // data = [{"name":"1","value":"白居易"},{"name":"2","value":"李白"},{"name":"3","value":"韩明明"},{"name":"4","value":"韩明明1"},{"name":"5","value":"韩明明2"}]
 
@@ -63,7 +63,11 @@
               $.each(data.data,function(i,n){
                 data_list.push({name:n.value,value:n.name})
               });
+              console.log(data_list)
               cb(data_list)
+            },
+            error(){
+                cb([])
             }
         });
 		},
