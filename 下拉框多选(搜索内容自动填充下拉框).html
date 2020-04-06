@@ -3,20 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <title>layui多选插件</title>
+    <link rel="stylesheet" href="./static/layui/css/layui.css">
 </head>
-<script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
-<!--<script src="./static/layui/layui.js"></script>-->
+<script src="https://code.jquery.com/jquery-2.0.0.min.js"></script>
+<!--<script src="./static/layui/lay/modules/jquery.js"></script>-->
+<script src="./static/layui/layui.all.js"></script>
 <script src="./static/layui/xm-select.js"></script>
 
 <body>
-<div id="demo1">
-</div>
-<div id="demo1_value">获取选中的值</div>
+<!--<div id="demo1">-->
+<!--</div>-->
+<!--<div id="demo1_value">获取选中的值</div>-->
+<div id="click" onclick="openLay()">弹出</div>
 </body>
 
 <script  type="text/javascript">
+  layui.use('layer', function(){
+    window.layer = layui.layer;
+  });
+  layui.use('form', function(){
+    window.form = layui.form;
 
-  var demo1 = xmSelect.render({
+  })
+  function selectUser() {
+    var demo1 = xmSelect.render({
 		el: '#demo1',
 		autoRow: true,
 		toolbar: { show: false },
@@ -33,19 +43,6 @@
 			if(!val){
 				return cb([]);
 			}
-			//这里引入了一个第三方插件axios, 相当于$.ajax
-			// axios({
-			// 	method: 'get',
-			// 	url: 'https://www.fastmock.site/mock/98228b1f16b7e5112d6c0c87921eabc1/xmSelect/search',
-			// 	params: {
-			// 		keyword: val,
-			// 	}
-			// }).then(response => {
-			// 	var res = response.data;
-			// 	cb(res.data)
-			// }).catch(err => {
-			// 	cb([]);
-			// });
 			$.ajax({
             //请求方式
             type:"GET",
@@ -55,29 +52,199 @@
             dataType: "json",
             //请求成功后要执行的函数，拼接html
             success: function(data){
-              console.log(data.data)
+              // console.log(data.data)
               //数据结构
-              // data = [{"name":"1","value":"白居易"},{"name":"2","value":"李白"},{"name":"3","value":"韩明明"},{"name":"4","value":"韩明明1"},{"name":"5","value":"韩明明2"}]
+              data = [{"name":"白居易","value":"1"},{"name":"李白","value":"2"},{"name":"韩明明","value":"3"},{"name":"韩明明1","value":"4"},{"name":"韩明明2","value":"5"}]
 
               var data_list = []
-              $.each(data.data,function(i,n){
-                data_list.push({name:n.value,value:n.name})
+              $.each(data,function(i,n){
+                data_list.push({name:n.name,value:n.value})
               });
-              console.log(data_list)
+              // console.log(data_list)
               cb(data_list)
             },
-            error(){
-                cb([])
+            error:function () {
+              cb([])
             }
         });
 		},
 	})
-  document.getElementById('demo1_value').onclick = function(){
-    //获取当前多选选中的值
-    // 函数getValue(type), type类型 name, nameStr, value, valueStr
-    var selectArr = demo1.getValue("value");
-    document.getElementById('demo1_value').innerHTML = `\n选中的值：\n\n` + JSON.stringify(selectArr, null, 2);
+    return demo1
   }
+  // 最终确定的拷贝文件名列表
+  var finalUserListAndCasename = []
+  // 是否已经确定不再重名
+  var noSameName = false
+  function openLay(){
+    var casePath = "E:\\python_project\\user\\"
+    var caseName = "caseName"
+    var demo2=null
+
+    layer.open({
+      title: '选择人员',
+      type:5,
+      area: ['500px', '400px'],
+      content: '<div id="demo1" style="padding-right: 15px;padding-left: 15px;padding-top:15px"></div>',
+      btn: ['确定', '取消'],
+      success: function(layero, index){
+        demo2 = selectUser()
+      },
+      btn1: function(index, layero){
+        // 获取选中的value值
+        // 选中人员格式：{'name': '白居易', 'value': '1'}
+        // 为userList每个字典添加caseName，使用这个caseName去后台校验是否重名，以及修改名字后替换caseName再去校验
+        //{'name': '白居易', 'value': '1','caseName':'caseName',"casePath":'E:\python_project\user\'}
+        var userList = demo2.getValue()
+        var valueList = demo2.getValue("value")
+        var nameList = demo2.getValue("name")
+          var userListAndCasename = finalUserListAndCasename
+        if(userListAndCasename.length == 0){
+            $.each(userList,function (index,value) {
+              value["caseName"] = caseName
+              value["casePath"] = casePath
+              userListAndCasename.push(value)
+            })
+        }else{
+          var newUserListAndCasename = []
+          //当又新添加人员或删除人员时，更新finalUserListAndCasename
+          for(var i = 0;i<userList.length;i++){
+            var exist = true
+            for(var j = 0;j<userListAndCasename.length;j++){
+              if(valueList[i]==userListAndCasename[j]["value"]){
+                newUserListAndCasename.push(userListAndCasename[j])
+                exist = false
+                break
+              }
+            }
+            if(exist){
+              newUserListAndCasename.push({"name":nameList[i],"value":valueList[i],"caseName":caseName,"casePath":casePath})
+            }
+          }
+          finalUserListAndCasename = newUserListAndCasename
+          userListAndCasename = newUserListAndCasename
+        }
+        // 调用校验用例名接口，为每一个字典添加state字段，代表是否有重名
+        checkCaseName(userListAndCasename)
+        console.log(finalUserListAndCasename)
+        if(noSameName){
+           $.ajax({
+             type: "POST",
+             url: "http://127.0.0.1:9000/copy_case/",
+             dataType: "json",
+             async: false,
+             data: JSON.stringify({
+               userList: finalUserListAndCasename,
+               oldCasePath:casePath+caseName,
+             }),
+             success:function (res) {
+                alert("复制完成")
+               layer.close(index)
+             }
+           })
+
+        }
+      }
+    });
+  }
+
+  function openRenamePage(content,sameNameList) {
+    // sameNameList:[{'name': '白居易', 'value': '1', 'state': True,'caseName':'E:\python_project\user\caseName.txt'}]
+    // newCaseNameList:{'name': '白居易', 'value': '1','caseName':'E:\python_project\user\caseName.txt'}
+    // 打开新的页面
+
+    var currentIndex = parent.layer.open({
+                    title: '共享用例重命名',
+                    type:1,
+                    area: ['500px', '500px'],
+                    content: content,
+                    btn: ['确定', '取消'],
+                    success:function(layero){
+                      // 将保存按钮改变成提交按钮
+                      layero.addClass('layui-form');
+                      $(".layui-layer-btn0").not(":eq(0)").attr({
+                            'lay-filter': 'renameCaseName',
+                            'lay-submit': ''
+                      });
+                      form.render()
+                    },
+                    btn1: function(index,layero){
+                      form.on('submit(renameCaseName)', function(data){
+                          var dataField = data.field;
+                          // var isNull = false
+                          // 拼接新的newCaseNameList
+                          $.each(sameNameList,function (index1,val) {
+                            if(val["sameName"]){
+                              var name = val["name"]
+                              val["caseName"] = dataField[name]
+                              val["sameName"] = false
+
+                            }
+                          })
+                          finalUserListAndCasename = sameNameList
+                          sameNameList = checkCaseName(sameNameList)
+                          layer.close(currentIndex)
+                        });
+                    }
+    })
+  }
+
+  function checkCaseName(userListAndCasename) {
+    // console.log(caseName)
+    var sameNameList = []
+    var SameName = true
+      $.ajax({
+              type:"POST",
+              url:"http://127.0.0.1:9000/check_copy_case_name/",
+              dataType: "json",
+              async: false,
+              data:JSON.stringify({
+                userListAndCasename :userListAndCasename,
+              }),
+              success:function (response) {
+                if (response.result == "success") {
+                  sameNameList = userListAndCasename;
+                  SameName = false
+                  noSameName = true
+                  // alert("重命名完成！")
+                  // console.log(sameNameList)
+                }
+
+                // 循环 返回结果中的copyState:[{'name': '白居易', 'value': '1', 'state': True,'caseName':'E:\python_project\user\caseName.txt'}]
+                if(SameName){
+                  noSameName = false
+                  // 提示“以下人员用例重名，请修改后再共享”
+                  $.each(response.copyState, function (index, value) {
+                    sameNameList.push(value)
+                  });
+                  // console.log(sameNameList)
+                  // console.log(sameNameList)
+                  if (sameNameList.length !== 0) {
+                    // 拼接显示内容
+                    var content = ""
+                    $.each(sameNameList, function (index, value) {
+                      // content += `<div value="${value["value"]}"><label>${value["name"]}</label><input></div>`lay-verify="required"
+                      if(value["sameName"]){
+                        content += `<div class="layui-form-item">
+                                                <label class="layui-form-label">${value["name"]}:</label>
+                                                <div class="layui-input-block">
+                                                    <input type="text" name="${value["name"]}" userNum="${value["value"]}" required lay-verify="required" placeholder="请重命名用例名称" class="layui-input">
+                                                </div>
+
+                                          </div>`
+                      }
+
+                    })
+                    content = '<fieldset class="layui-elem-field"  style="text-align: center;" ><legend>为以下人员共享用例重命名</legend><form class="layui-form" id="renameCaseName" style="margin-top:15px;margin-right:35px">' + content + '</form></fieldset>'
+                    // 渲染form表单
+                    openRenamePage(content,sameNameList)
+                  }
+                }
+              }
+          })
+    return userListAndCasename
+  }
+
+
 </script>
 </html>
 
