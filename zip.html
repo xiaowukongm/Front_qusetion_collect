@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<script src="./static/jszip.js"></script>
+<script src="./static/FileSaver.min.js"></script>
+<script src="./static/xlsx.js"></script>
+<body>
+<div id="zip" onclick="save_zip()">
+    测试压缩excel文件
+</div>
+</body>
+<script>
+    function save_zip() {
+        var zip = new JSZip();
+        zip.file("Hello.txt", "Hello World\n");
+        // zip.file("hhh.xlsx",XLSX.readFile("E:\\python_project\\test.xlsx","file"))
+
+        var file = XLSX.read("E:\\python_project\\test.xlsx",{ type: "base64" })
+        console.log(file)
+        // var sheetName = workbook.SheetNames[0]
+        // var a = workbook.Sheets[sheetName]
+        // // var obj = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]]);
+        // console.log(sheetName)
+        // console.log(a['A2'])
+
+        //
+        // var reader = new FileReader();
+        // // a =reader.readAsDataURL("E:\\python_project\\test.xlsx");
+        // // console.log(a)
+        // reader.onload = function (e) {
+        //     var data = e.target.result;
+        //     var workbook = XLSX.read(data, {type: 'binary'});
+        //     // var json = JSON.stringify( XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]) );
+        //     var json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+        //     // if (callback) callback(json);
+        //     console.log(json)
+        // };
+        // reader.readAsBinaryString(file);
+        // 通过编写一个接口，Django后端读取文件并将内容返回给前端，前端重新写入csv文件
+        var str = "序号,标题,操作类型,操作内容,操作时间\n"
+        let i = 0
+        // for(var item of data ){
+        //   i++
+        //   str += `1,2,3,4,5,\n`
+        // }
+        while (i<=10){
+          i++
+          str += `1,2,3,4,5,\n`
+        }
+        // zip.file("hhh.csv",str)
+        // var img = zip.folder("images");
+        // img.file("smile.gif", imgData, {base64: true});
+        // zip.generateAsync({type:"blob"}).then(function(content) {
+        //     // see FileSaver.js
+        //     saveAs(content,"example.zip");
+        // });
+    }
+</script>
+</html>
