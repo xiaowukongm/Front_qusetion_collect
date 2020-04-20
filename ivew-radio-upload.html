@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>iview-upload-radio</title>
+    <link rel="stylesheet" type="text/css" href="http://unpkg.com/iview/dist/styles/iview.css">
+    <script type="text/javascript" src="http://v1.vuejs.org/js/vue.min.js"></script>
+    <script type="text/javascript" src="http://unpkg.com/iview@1.0.1/dist/iview.min.js"></script>
+</head>
+<body>
+<div id="app">
+    <template>
+        <Radio-group :model.sync="vertical" vertical>
+            <Radio value="apple">
+                <Icon type="social-apple"></Icon>
+                <span>Apple</span>
+            </Radio>
+            <Radio value="android">
+                <Icon type="social-android"></Icon>
+                <span>Android</span>
+            </Radio>
+            <Radio value="windows">
+                <Icon type="social-windows"></Icon>
+                <span>Windows</span>
+            </Radio>
+        </Radio-group>
+    </template>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            visible: false
+        },
+        methods: {
+            show: function () {
+                this.visible = true;
+            }
+        }
+    })
+</script>
+</body>
+</html>

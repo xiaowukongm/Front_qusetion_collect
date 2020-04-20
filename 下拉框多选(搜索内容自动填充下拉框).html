@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <title>layui多选插件</title>
     <link rel="stylesheet" href="./static/layui/css/layui.css">
+    <link rel="stylesheet" href="./static/layui/css/formSelects-v4.css">
 </head>
 <script src="https://code.jquery.com/jquery-2.0.0.min.js"></script>
 <!--<script src="./static/layui/lay/modules/jquery.js"></script>-->
 <script src="./static/layui/layui.all.js"></script>
-<script src="./static/layui/xm-select.js"></script>
+<!--<script src="./static/layui/xm-select.js"></script>-->
+<script src="./static/layui/formSelects-v4.js"></script>
 
 <body>
-<!--<div id="demo1">-->
-<!--</div>-->
-<!--<div id="demo1_value">获取选中的值</div>-->
-<div id="click" onclick="openLay()">弹出</div>
+<div id="click" onclick="openLay_s()">弹出xm-select多选</div>
+<div id="click_f" onclick="openLay_f()">弹出formselects多选</div>
 </body>
 
 <script  type="text/javascript">
@@ -25,10 +25,13 @@
     window.form = layui.form;
 
   })
-  function selectUser() {
+  var formSelects = layui.formSelects;
+  // xm-select多选
+  function selectUser1() {
     var demo1 = xmSelect.render({
 		el: '#demo1',
 		autoRow: true,
+        tips: '输入工号姓名',
 		toolbar: { show: false },
 		filterable: true,
 		remoteSearch: true,
@@ -47,7 +50,8 @@
             //请求方式
             type:"GET",
             //文件位置
-            url:"http://127.0.0.1:9000/get_menus",
+            // url:"http://127.0.0.1:9000/get_menus",
+            url:"",
             //返回数据格式为json,也可以是其他格式如
             dataType: "json",
             //请求成功后要执行的函数，拼接html
@@ -71,11 +75,89 @@
 	})
     return demo1
   }
+
+
+  function selectUser_f() {
+
+    formSelects.config('demo1111', {
+        type: 'get',                //请求方式: post, get, put, delete...
+        searchUrl: 'http://127.0.0.1:9000/test',              //搜索地址, 默认使用xm-select-search的值, 此参数优先级高
+        searchName: 'keyword',      //自定义搜索内容的key值
+        // searchVal: '',              //自定义搜索内容, 搜素一次后失效, 优先级高于搜索框中的值
+        // keyName: 'name',            //自定义返回数据中name的key, 默认 name
+        // keyVal: 'value',            //自定义返回数据中value的key, 默认 value
+        // keySel: 'selected',         //自定义返回数据中selected的key, 默认 selected
+        // keyDis: 'disabled',         //自定义返回数据中disabled的key, 默认 disabled
+        // keyChildren: 'children',    //联动多选自定义children
+        delay: 500,                 //搜索延迟时间, 默认停止输入500ms后开始搜索
+        // direction: 'auto',          //多选下拉方向, auto|up|down
+        response: {
+            statusCode: 0,          //成功状态码
+            statusName: 'code',     //code key
+            msgName: 'msg',         //msg key
+            dataName: 'data'        //data key
+        },
+        success: function(id, url, searchVal, result){      //使用远程方式的success回调
+            console.log(id);        //组件ID xm-select
+            console.log(url);       //URL
+            console.log(searchVal); //搜索的value
+            console.log(result);    //返回的结果
+            // 打开下拉框
+            $('.xm-input.xm-select').click()
+        },
+        error: function(id, url, searchVal, err){           //使用远程方式的error回调
+            //同上
+            console.log(err);   //err对象
+        },
+        beforeSuccess: function(id, url, searchVal, result){        //success之前的回调, 干嘛呢? 处理数据的, 如果后台不想修改数据, 你也不想修改源码, 那就用这种方式处理下数据结构吧
+            console.log(id);        //组件ID xm-select
+            console.log(url);       //URL
+            console.log(searchVal); //搜索的value
+            console.log(result);    //返回的结果
+            data = [{"name":"白居易","value":"1"},{"name":"李白","value":"2"},{"name":"韩明明","value":"3"},{"name":"韩明明1","value":"4"},{"name":"韩明明2","value":"5"},{"name":"韩明明23","value":"6"},{"name":"韩明明23","value":"7"}]
+            result = {
+                'code':0,
+                "data":data,
+            }
+            return result;  //必须return一个结果, 这个结果要符合对应的数据结构
+        },
+        beforeSearch: function(id, url, searchVal){         //搜索前调用此方法, return true将触发搜索, 否则不触发
+            if(!searchVal || !searchFlag){//如果搜索内容为空,就不触发搜索
+                return false;
+            }
+            return true;
+        },
+        clearInput: false,          //当有搜索内容时, 点击选项是否清空搜索内容, 默认不清空
+    }, true);
+
+    formSelects.render('demo1111',{
+        height:"auto",
+        searchType: "dl",    //搜索框的位置
+        template: function(name, value, selected, disabled){
+            //例如: 反转字符串
+            //return name.split('').reverse().join('');
+            return value.name  + '<span style="position: absolute; right: 10px; color: #8799a3">'+value.value+'</span>'
+        },
+    })
+    formSelects.btns('demo1111',[]);
+  }
+
+
+  // formselects 主动触发搜索
+  function searchBtn() {
+    var val = $("#search").val()
+    searchFlag = true
+    formSelects.search('demo1111', val);
+
+  }
+
+
   // 最终确定的拷贝文件名列表
   var finalUserListAndCasename = []
   // 是否已经确定不再重名
   var noSameName = false
-  function openLay(){
+  var searchFlag= false
+  function openLay_s(){
     var casePath = "E:\\python_project\\user\\"
     var caseName = "caseName"
     var demo2=null
@@ -84,7 +166,7 @@
       title: '选择人员',
       type:5,
       area: ['500px', '400px'],
-      content: '<div id="demo1" style="padding-right: 15px;padding-left: 15px;padding-top:15px"></div>',
+      content: '<div id="demo1" style="padding-right: 15px;padding-left: 15px;padding-top:15px"></div><button class="btn" id="demo1-getValue">获取选中值</button>',
       btn: ['确定', '取消'],
       success: function(layero, index){
         demo2 = selectUser()
@@ -146,6 +228,82 @@
       }
     });
   }
+
+  function openLay_f(){
+    var casePath = "E:\\python_project\\user\\"
+    var caseName = "caseName"
+    var demo2=null
+
+    layer.open({
+      title: '选择人员',
+      type:5,
+      area: ['500px', '400px'],
+      content: '<div style="display: flex;justify-content: center"><input class="layui-input" placeholder="请输入姓名或工号或拼音" id="search" style="width: 75%;margin-left: 10px;margin-top: 10px;margin-bottom: 10px;"><button class="layui-btn" style="margin-top: 10px;margin-left: 2px;" onclick="searchBtn()">搜索</button></div><div style="margin-left: 35px;margin-right: 22px;"><select xm-select="demo1111" ><option value=""></option></select></div>',
+      btn: ['确定', '取消'],
+      success: function(layero, index){
+        demo2 = selectUser_f()
+      },
+      btn1: function(index, layero){
+        // 获取选中的value值
+        // 选中人员格式：{'name': '白居易', 'value': '1'}
+        // 为userList每个字典添加caseName，使用这个caseName去后台校验是否重名，以及修改名字后替换caseName再去校验
+        //{'name': '白居易', 'value': '1','caseName':'caseName',"casePath":'E:\python_project\user\'}
+        // var userList = demo2.getValue()
+        // var valueList = demo2.getValue("value")
+        // var nameList = demo2.getValue("name")
+        var userList = layui.formSelects.value('demo1111');
+        var valueList = layui.formSelects.value('demo1111', 'val');
+        var nameList = layui.formSelects.value('demo1111', 'name');
+        var userListAndCasename = finalUserListAndCasename
+        if(userListAndCasename.length == 0){
+            $.each(userList,function (index,value) {
+              value["caseName"] = caseName
+              value["casePath"] = casePath
+              userListAndCasename.push(value)
+            })
+        }else{
+          var newUserListAndCasename = []
+          //当又新添加人员或删除人员时，更新finalUserListAndCasename
+          for(var i = 0;i<userList.length;i++){
+            var exist = true
+            for(var j = 0;j<userListAndCasename.length;j++){
+              if(valueList[i]==userListAndCasename[j]["value"]){
+                newUserListAndCasename.push(userListAndCasename[j])
+                exist = false
+                break
+              }
+            }
+            if(exist){
+              newUserListAndCasename.push({"name":nameList[i],"value":valueList[i],"caseName":caseName,"casePath":casePath})
+            }
+          }
+          finalUserListAndCasename = newUserListAndCasename
+          userListAndCasename = newUserListAndCasename
+        }
+        // 调用校验用例名接口，为每一个字典添加state字段，代表是否有重名
+        checkCaseName(userListAndCasename)
+        console.log(finalUserListAndCasename)
+        if(noSameName){
+           $.ajax({
+             type: "POST",
+             url: "http://127.0.0.1:9000/copy_case/",
+             dataType: "json",
+             async: false,
+             data: JSON.stringify({
+               userList: finalUserListAndCasename,
+               oldCasePath:casePath+caseName,
+             }),
+             success:function (res) {
+                alert("复制完成")
+               layer.close(index)
+             }
+           })
+
+        }
+      }
+    });
+  }
+
 
   function openRenamePage(content,sameNameList) {
     // sameNameList:[{'name': '白居易', 'value': '1', 'state': True,'caseName':'E:\python_project\user\caseName.txt'}]
